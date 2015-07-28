@@ -1,0 +1,12 @@
+[general]
+name=NGA Image Browser
+qgisMinimumVersion=2.8
+description=A simple plugin to help browse through NGA images.
+version=version 1.0
+author=Peter Ersts
+email=ersts@amnh.org
+tags=vector
+category=vector
+about=A simple plugin to help browse through NGA images.
+; change icon...
+icon=icon.png
