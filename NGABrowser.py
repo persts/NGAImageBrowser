@@ -27,11 +27,25 @@ import resources
 from Ui_NGABrowser import Ui_NGABrowserWidget
 
 from PyQt4 import QtNetwork
+import webbrowser
 
 class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
   def __init__(self):
     QWidget.__init__(self)
     self.setupUi(self);
+    self.layer = None
+    self.featureSet = {}
+    self.objectIdUrlMap = {}
+    self.frameUsable.setDisabled(True)
+    self.pButtonMetadata.clicked.connect(self.openMetadata)
+    self.tabWidget.currentChanged.connect(self.tabSelected)
+    self.rButtonNo.toggled.connect(self.toggledNo)
+    self.rButtonMaybe.toggled.connect(self.toggledMaybe)
+    self.rButtonYes.toggled.connect(self.toggledYes)
+
+  def addFeature(self, url, feature):
+    self.featureSet[url] = feature
+    self.objectIdUrlMap[str(feature.attribute('objectid'))] = url
 
   def loadImage(self, networkReply):
     data = networkReply.readAll()
@@ -39,11 +53,62 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     pixmap.loadFromData(data)
     label = QLabel()
     label.setPixmap(pixmap)
-    self.tabWidget.addTab(label, networkReply.url().queryItemValue('objectid'))
+    self.tabWidget.addTab(label, str(self.featureSet[networkReply.url().toString()].attribute('objectid')))
+
+  def openMetadata(self):
+    objectid = self.tabWidget.tabText(self.tabWidget.currentIndex())
+    if objectid != "":
+      feature = self.featureSet[self.objectIdUrlMap[objectid]]
+      webbrowser.open(feature.attribute('browseurl'))
 
   def reset(self):
     while self.tabWidget.count() > 0:
-      self.tabWidget.removeTab(0)
+      self.tabWidget.removeTab(self.tabWidget.count() - 1)
+    self.featureSet.clear()
+    self.objectIdUrlMap.clear()
+
+  def setLayer(self, layer):
+    self.layer = layer
+
+  def tabSelected(self, index):
+    if index < 0:
+      return 
+    objectid = self.tabWidget.tabText(index)
+    feature = self.featureSet[self.objectIdUrlMap[objectid]]
+    if feature.fieldNameIndex('order') != -1:
+      self.frameUsable.setEnabled(True)
+      attr = feature.attribute('order')
+      if attr == 'no':
+        self.rButtonNo.setChecked(True)
+      elif attr == 'maybe':
+        self.rButtonMaybe.setChecked(True)
+      elif attr == 'yes':
+        self.rButtonYes.setChecked(True)
+      else:
+        self.rButtonYes.setChecked(False)
+        self.rButtonMaybe.setChecked(False)
+        self.rButtonNo.setChecked(False)
+    else:
+      self.frameUsable.setDisabled(True)
+
+  def toggledNo(self, checked):
+    if checked:
+      self.updateAttribute('no')
+
+  def toggledMaybe(self, checked):
+    if checked:
+      self.updateAttribute('maybe')
+
+  def toggledYes(self, checked):
+    if checked:
+      self.updateAttribute('yes')
+
+  def updateAttribute(self, value):
+    objectid = self.tabWidget.tabText(self.tabWidget.currentIndex())
+    feature = self.featureSet[self.objectIdUrlMap[objectid]]
+    if value != feature.attribute('order'):
+      attributes = {feature.fieldNameIndex('order'): value}
+      self.layer.dataProvider().changeAttributeValues({feature.id(): attributes})
 
 class NGABrowser: 
   def __init__(self, iface):
@@ -76,11 +141,18 @@ class NGABrowser:
       QMessageBox.information(self.iface.mainWindow(),"Info",'Your active layer must be a polygon layer')
     else:
       self.display.reset()
+      self.display.setLayer(layer)
       for feature in layer.getFeatures():
+        if feature.fieldNameIndex('browseurl') == -1:
+          QMessageBox.information(self.iface.mainWindow(),"Info",'Your active layer does not appear to be a NGA footprint layer')
+          return
         if feature.geometry().contains(point):
-          url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]+"&objectid="+str(feature.attribute('objectid'))
+          url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]
+          self.display.addFeature(url, feature)
           request = QtNetwork.QNetworkRequest(QUrl(url))
           self.network.get(request)
+      self.display.show()
+      self.display.raise_()
 
   def sslErrorHandler(self, networkReply):
     networkReply.ignoreSslErrors()
@@ -94,5 +166,4 @@ class NGABrowser:
     self.canvas.setMapTool(self.clickTool)
     # create and show the dialog 
     self.display = NGABrowserWindow() 
-    # show the dialog
-    self.display.show()
+    
