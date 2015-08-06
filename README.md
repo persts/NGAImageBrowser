@@ -1,1 +1,3 @@
 # NGAImageBrowser
+
+This QGIS plugin is designed to display quicklook images for specific image footprints in a vector coverage of high resolution image footprints that represent NextView licensed images available from the National Geospatial-Intelligence Agency (NGA) archives. Once the plugin is installed and launched in QGIS the NGABrowser window will open an the cursor will turn to a plus (“+”) sign. Clicking on a vector coverage of the NGA image footprints will display the quicklook images in the NGABrowser  for all footprints that intersect with the cursor when it was clicked. The plugin was developed and tested using QGIS 2.10.1.
