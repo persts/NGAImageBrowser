@@ -32,6 +32,10 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
   def __init__(self):
     QWidget.__init__(self)
     self.setupUi(self);
+    self.identifyResults = {}
+
+  def addFeature(self, url, feature):
+    self.identifyResults[url] = feature
 
   def loadImage(self, networkReply):
     data = networkReply.readAll()
@@ -39,9 +43,10 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     pixmap.loadFromData(data)
     label = QLabel()
     label.setPixmap(pixmap)
-    self.tabWidget.addTab(label, networkReply.url().queryItemValue('objectid'))
+    self.tabWidget.addTab(label, str(self.identifyResults[networkReply.url().toString()].attribute('objectid')))
 
   def reset(self):
+    self.identifyResults.clear()
     while self.tabWidget.count() > 0:
       self.tabWidget.removeTab(0)
 
@@ -71,6 +76,8 @@ class NGABrowser:
     self.display.loadImage(networkReply)
 
   def mouseDown(self, point, button):
+    self.display.show()
+    self.display.raise_()
     layer = self.canvas.currentLayer()
     if layer is None or QGis.vectorGeometryType(layer.geometryType()) != 'Polygon':
       QMessageBox.information(self.iface.mainWindow(),"Info",'Your active layer must be a polygon layer')
@@ -78,7 +85,8 @@ class NGABrowser:
       self.display.reset()
       for feature in layer.getFeatures():
         if feature.geometry().contains(point):
-          url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]+"&objectid="+str(feature.attribute('objectid'))
+          url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]
+          self.display.addFeature(url, feature)
           request = QtNetwork.QNetworkRequest(QUrl(url))
           self.network.get(request)
 
@@ -94,5 +102,4 @@ class NGABrowser:
     self.canvas.setMapTool(self.clickTool)
     # create and show the dialog 
     self.display = NGABrowserWindow() 
-    # show the dialog
-    self.display.show()
+    
