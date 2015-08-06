@@ -109,6 +109,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     if value != feature.attribute('order'):
       attributes = {feature.fieldNameIndex('order'): value}
       self.layer.dataProvider().changeAttributeValues({feature.id(): attributes})
+      feature.setAttribute('order', value)
 
 class NGABrowser: 
   def __init__(self, iface):
