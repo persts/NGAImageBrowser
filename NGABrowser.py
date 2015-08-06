@@ -1,6 +1,6 @@
 """
 /***************************************************************************
-Name			 	         : NGA Image Browser
+Name                 : NGA Image Browser
 Description          : A simple plugin to help browse through NGA images.
 Date                 : 2015-07-27 
 copyright            : (C) 2015 by Peter J. Ersts
