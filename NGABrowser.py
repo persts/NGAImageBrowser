@@ -37,7 +37,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     self.featureSet = {}
     self.objectIdUrlMap = {}
     self.frameUsable.setDisabled(True)
-    self.pButtonMetadata.clicked.connect(self.openMetadata)
+    self.pButtonCatalog.clicked.connect(self.openCatalog)
     self.tabWidget.currentChanged.connect(self.tabSelected)
     self.rButtonNo.toggled.connect(self.toggledNo)
     self.rButtonMaybe.toggled.connect(self.toggledMaybe)
@@ -55,11 +55,14 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     label.setPixmap(pixmap)
     self.tabWidget.addTab(label, str(self.featureSet[networkReply.url().toString()].attribute('objectid')))
 
-  def openMetadata(self):
+  def openCatalog(self):
     objectid = self.tabWidget.tabText(self.tabWidget.currentIndex())
     if objectid != "":
       feature = self.featureSet[self.objectIdUrlMap[objectid]]
-      webbrowser.open(feature.attribute('browseurl'))
+      if feature.fieldNameIndex('browseurl') == -1:
+        webbrowser.open(feature.attribute('previewurl'))
+      else :
+        webbrowser.open(feature.attribute('browseurl'))
 
   def reset(self):
     while self.tabWidget.count() > 0:
@@ -144,11 +147,14 @@ class NGABrowser:
       self.display.reset()
       self.display.setLayer(layer)
       for feature in layer.getFeatures():
-        if feature.fieldNameIndex('browseurl') == -1:
+        if feature.fieldNameIndex('browseurl') == -1 and feature.fieldNameIndex('previewurl') == -1:
           QMessageBox.information(self.iface.mainWindow(),"Info",'Your active layer does not appear to be a NGA footprint layer')
           return
         if feature.geometry().contains(point):
-          url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]
+          if feature.fieldNameIndex('browseurl') == -1:
+            url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('previewurl').split('?')[1]
+          else:  
+            url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]
           self.display.addFeature(url, feature)
           request = QtNetwork.QNetworkRequest(QUrl(url))
           self.network.get(request)

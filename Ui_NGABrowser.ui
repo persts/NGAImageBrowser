@@ -22,9 +22,9 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QPushButton" name="pButtonMetadata">
+    <widget class="QPushButton" name="pButtonCatalog">
      <property name="text">
-      <string>Metadata</string>
+      <string>Catalog</string>
      </property>
     </widget>
    </item>

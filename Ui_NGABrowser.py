@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'Ui_NGABrowser.ui'
 #
-# Created: Thu Aug  6 10:30:47 2015
+# Created: Mon Aug 10 13:09:12 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -32,9 +32,9 @@ class Ui_NGABrowserWidget(object):
         self.tabWidget = QtGui.QTabWidget(NGABrowserWidget)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
         self.gridLayout.addWidget(self.tabWidget, 0, 0, 1, 2)
-        self.pButtonMetadata = QtGui.QPushButton(NGABrowserWidget)
-        self.pButtonMetadata.setObjectName(_fromUtf8("pButtonMetadata"))
-        self.gridLayout.addWidget(self.pButtonMetadata, 1, 0, 1, 1)
+        self.pButtonCatalog = QtGui.QPushButton(NGABrowserWidget)
+        self.pButtonCatalog.setObjectName(_fromUtf8("pButtonCatalog"))
+        self.gridLayout.addWidget(self.pButtonCatalog, 1, 0, 1, 1)
         self.frameUsable = QtGui.QFrame(NGABrowserWidget)
         self.frameUsable.setMaximumSize(QtCore.QSize(16777215, 100))
         self.frameUsable.setFrameShape(QtGui.QFrame.StyledPanel)
@@ -66,7 +66,7 @@ class Ui_NGABrowserWidget(object):
 
     def retranslateUi(self, NGABrowserWidget):
         NGABrowserWidget.setWindowTitle(_translate("NGABrowserWidget", "NGABrowser", None))
-        self.pButtonMetadata.setText(_translate("NGABrowserWidget", "Metadata", None))
+        self.pButtonCatalog.setText(_translate("NGABrowserWidget", "Catalog", None))
         self.label.setText(_translate("NGABrowserWidget", "Usable?", None))
         self.rButtonNo.setText(_translate("NGABrowserWidget", "No", None))
         self.rButtonMaybe.setText(_translate("NGABrowserWidget", "Maybe", None))
