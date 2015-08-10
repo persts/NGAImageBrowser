@@ -74,15 +74,27 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
       self.tabWidget.removeTab(self.tabWidget.count() - 1)
     self.featureSet.clear()
     self.objectIdUrlMap.clear()
+    if self.layer:
+      self.layer.removeSelection()
+    for row in range(0, self.metadata.rowCount()):
+      self.metadata.item(row, 1).setText("")
 
   def setLayer(self, layer):
     self.layer = layer
+    self.metadata.setRowCount(self.layer.dataProvider().fields().size())
+    count = 0
+    for field in self.layer.dataProvider().fields():
+      self.metadata.setItem(count, 0, QTableWidgetItem(str(field.name())))
+      self.metadata.setItem(count, 1, QTableWidgetItem(''))
+      count += 1
 
   def tabSelected(self, index):
     if index < 0:
       return 
     objectid = self.tabWidget.tabText(index)
     feature = self.featureSet[self.objectIdUrlMap[objectid]]
+    self.layer.removeSelection()
+    self.layer.select(feature.id())
     if feature.fieldNameIndex('order') != -1:
       self.frameUsable.setEnabled(True)
       attr = feature.attribute('order')
@@ -98,6 +110,13 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
         self.rButtonNo.setChecked(False)
     else:
       self.frameUsable.setDisabled(True)
+    count = 0
+    for field in self.layer.dataProvider().fields():
+      try:
+        self.metadata.item(count, 1).setText(feature.attribute(field.name()).toString())
+      except:
+        self.metadata.item(count, 1).setText(str(feature.attribute(field.name())))
+      count += 1
 
   def toggledNo(self, checked):
     if checked:
