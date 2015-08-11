@@ -35,7 +35,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     self.setupUi(self);
     self.layer = None
     self.featureSet = {}
-    self.objectIdUrlMap = {}
+    self.idUrlMap = {}
     self.frameUsable.setDisabled(True)
     self.pButtonCatalog.clicked.connect(self.openCatalog)
     self.tabWidget.currentChanged.connect(self.tabSelected)
@@ -45,7 +45,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
 
   def addFeature(self, url, feature):
     self.featureSet[url] = feature
-    self.objectIdUrlMap[str(feature.attribute('objectid'))] = url
+    self.idUrlMap[str(feature.attribute('objectid'))] = url
     self.setWindowTitle('NGABrowser - '+ str(len(self.featureSet.keys())) + ' preview(s)')
 
   def loadImage(self, networkReply):
@@ -54,15 +54,17 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     pixmap.loadFromData(data)
     label = QLabel()
     label.setPixmap(pixmap)
+    scrollArea = QScrollArea(self.tabWidget)
+    scrollArea.setWidget(label)
     try:
-      self.tabWidget.addTab(label, str(self.featureSet[networkReply.url().toString()].attribute('objectid')))
+      self.tabWidget.addTab(scrollArea, str(self.featureSet[networkReply.url().toString()].attribute('objectid')))
     except KeyError, e:
       pass
 
   def openCatalog(self):
-    objectid = self.tabWidget.tabText(self.tabWidget.currentIndex())
-    if objectid != "":
-      feature = self.featureSet[self.objectIdUrlMap[objectid]]
+    objectId = self.tabWidget.tabText(self.tabWidget.currentIndex())
+    if objectId != "":
+      feature = self.featureSet[self.idUrlMap[objectId]]
       if feature.fieldNameIndex('browseurl') == -1:
         webbrowser.open(feature.attribute('previewurl'))
       else :
@@ -73,7 +75,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     while self.tabWidget.count() > 0:
       self.tabWidget.removeTab(self.tabWidget.count() - 1)
     self.featureSet.clear()
-    self.objectIdUrlMap.clear()
+    self.idUrlMap.clear()
     if self.layer:
       self.layer.removeSelection()
     for row in range(0, self.metadata.rowCount()):
@@ -91,8 +93,8 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
   def tabSelected(self, index):
     if index < 0:
       return 
-    objectid = self.tabWidget.tabText(index)
-    feature = self.featureSet[self.objectIdUrlMap[objectid]]
+    objectId = self.tabWidget.tabText(index)
+    feature = self.featureSet[self.idUrlMap[objectId]]
     self.layer.removeSelection()
     self.layer.select(feature.id())
     if feature.fieldNameIndex('order') != -1:
@@ -131,8 +133,8 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
       self.updateAttribute('yes')
 
   def updateAttribute(self, value):
-    objectid = self.tabWidget.tabText(self.tabWidget.currentIndex())
-    feature = self.featureSet[self.objectIdUrlMap[objectid]]
+    objectId = self.tabWidget.tabText(self.tabWidget.currentIndex())
+    feature = self.featureSet[self.idUrlMap[objectId]]
     if value != feature.attribute('order'):
       attributes = {feature.fieldNameIndex('order'): value}
       self.layer.dataProvider().changeAttributeValues({feature.id(): attributes})
@@ -166,20 +168,20 @@ class NGABrowser:
   def mouseDown(self, point, button):
     layer = self.canvas.currentLayer()
     if layer is None or QGis.vectorGeometryType(layer.geometryType()) != 'Polygon':
-      QMessageBox.information(self.iface.mainWindow(),"Info",'Your active layer must be a polygon layer')
+      QMessageBox.information(self.iface.mainWindow(),'Info','Your active layer must be a polygon layer')
     else:
       self.display.reset()
       self.display.setLayer(layer)
       for feature in layer.getFeatures():
         if feature.fieldNameIndex('browseurl') == -1 and feature.fieldNameIndex('previewurl') == -1:
-          QMessageBox.information(self.iface.mainWindow(),"Info",'Your active layer does not appear to be a NGA footprint layer')
+          QMessageBox.information(self.iface.mainWindow(),'Info','Your active layer does not appear to be a NGA footprint layer')
           return
         if feature.geometry().contains(point):
           try:
             if feature.fieldNameIndex('browseurl') == -1:
-              url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('previewurl').split('?')[1]
+              url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('previewurl').split('?')[1].split('&')[1] +"&imageHeight=1024&imageWidth=1024"
             else:  
-              url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1]
+              url = "https://browse.digitalglobe.com/imagefinder/showBrowseImage?" + feature.attribute('browseurl').split('?')[1] +"&imageHeight=1024&imageWidth=1024"
             self.display.addFeature(url, feature)
             request = QtNetwork.QNetworkRequest(QUrl(url))
             self.network.get(request)
