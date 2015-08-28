@@ -29,6 +29,9 @@ from Ui_NGABrowser import Ui_NGABrowserWidget
 from PyQt4 import QtNetwork
 import webbrowser
 
+#Attribute to be displayed on the browser tabs
+ID_ATTRIBUTE = 'objectid'
+
 class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
   def __init__(self):
     QWidget.__init__(self)
@@ -45,7 +48,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
 
   def addFeature(self, url, feature):
     self.featureSet[url] = feature
-    self.idUrlMap[str(feature.attribute('objectid'))] = url
+    self.idUrlMap[str(feature.attribute(ID_ATTRIBUTE))] = url
     self.setWindowTitle('NGABrowser - '+ str(len(self.featureSet.keys())) + ' preview(s)')
 
   def loadImage(self, networkReply):
@@ -57,7 +60,7 @@ class NGABrowserWindow(QWidget, Ui_NGABrowserWidget):
     scrollArea = QScrollArea(self.tabWidget)
     scrollArea.setWidget(label)
     try:
-      self.tabWidget.addTab(scrollArea, str(self.featureSet[networkReply.url().toString()].attribute('objectid')))
+      self.tabWidget.addTab(scrollArea, str(self.featureSet[networkReply.url().toString()].attribute(ID_ATTRIBUTE)))
     except KeyError, e:
       pass
 
